@@ -1,0 +1,44 @@
+package com.serdigital.pataditas.data.local.entity
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import com.serdigital.pataditas.data.local.Converters
+
+/**
+ * Entidad Room para sesiones de conteo de patadas.
+ * Diseñada para sincronización futura con Firestore (campo remoteId).
+ */
+@Entity(tableName = "kick_sessions")
+@TypeConverters(Converters::class)
+data class KickSessionEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    /** ID remoto para sincronización con Firestore. Null mientras no haya Firebase. */
+    val remoteId: String? = null,
+    val startTime: Long,
+    val endTime: Long?,
+    val kickCount: Int,
+    /** Lista de timestamps de cada patada individual */
+    val kickTimestamps: List<Long>,
+    val date: Long,
+    val durationSeconds: Long,
+    val notes: String? = null,
+    val isSynced: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+/**
+ * Entidad Room para notas de la usuaria.
+ */
+@Entity(tableName = "notes")
+data class NoteEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val remoteId: String? = null,
+    val title: String,
+    val content: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isSynced: Boolean = false
+)

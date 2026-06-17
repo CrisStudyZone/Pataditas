@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.serdigital.pataditas"
-        minSdk = 24
+        minSdk = 25
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     implementation(libs.hilt.android)
+    implementation(libs.compose.material3)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
