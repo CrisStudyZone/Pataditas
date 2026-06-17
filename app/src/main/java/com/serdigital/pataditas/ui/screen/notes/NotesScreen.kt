@@ -219,6 +219,7 @@ private fun NoteCard(
 
 // ─── Detalle / editor de nota ────────────────────────────────────────────────
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteDetailScreen(
