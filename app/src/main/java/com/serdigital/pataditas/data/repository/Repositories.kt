@@ -160,9 +160,9 @@ class StatsRepositoryImpl @Inject constructor(
 }
 
 /**
- * Implementación stub del repositorio de autenticación.
- * Reemplazar con FirebaseAuthRepositoryImpl cuando se integre Firebase.
- */
+Implementación original utilizada antes de integrar Firebase Authentication.
+Se conserva únicamente como referencia para el TP.
+
 @Singleton
 class StubAuthRepositoryImpl @Inject constructor() : AuthRepository {
 
@@ -179,4 +179,5 @@ class StubAuthRepositoryImpl @Inject constructor() : AuthRepository {
         Result.failure(NotImplementedError("Firebase Auth no implementado aún"))
 
     override suspend fun signOut() { /* no-op */ }
-}
+
+}*/

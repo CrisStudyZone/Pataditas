@@ -15,6 +15,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.serdigital.pataditas.ui.theme.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.serdigital.pataditas.ui.viewmodel.AuthViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import com.serdigital.pataditas.ui.viewmodel.AuthState
 
 /**
  * Pantalla de perfil / autenticación.
@@ -38,7 +43,8 @@ fun ProfileScreen(
                     listOf(LavandaSuave.copy(0.4f), BlancoRoto, CieloSuave.copy(0.2f))
                 )
             )
-    ) {
+    )
+    {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -109,24 +115,22 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // Botón deshabilitado (se habilitará con Firebase)
             Button(
-                onClick = { /* Firebase Auth: navegar a Login */ },
+                onClick = onNavigateToLogin,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = CieloProfundo.copy(alpha = 0.4f)
+                    containerColor = CieloProfundo
                 ),
-                enabled = false
+                enabled = true
             ) {
                 Text(
-                    "Iniciar sesión · Próximamente",
+                    "Iniciar sesión",
                     style = MaterialTheme.typography.titleSmall
                 )
             }
-
             Spacer(Modifier.height(12.dp))
 
             Text(
@@ -146,15 +150,101 @@ fun ProfileScreen(
  * - signInWithEmailAndPassword
  * - Google Sign-In
  * - Mostrar errores de auth
- */
+     */
+    @Composable
+    fun LoginScreen(
+        viewModel: AuthViewModel = hiltViewModel(),
+        onNavigateToRegister: () -> Unit = {},
+        onNavigateToForgotPassword: () -> Unit = {},
+        onLoginSuccess: () -> Unit = {}
+    ) {
+        val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.authState) {
+        if (uiState.authState is AuthState.Authenticated) {
+            onLoginSuccess()
+        }
+    }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BlancoRoto)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("👶", fontSize = 56.sp)
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "Bienvenida de nuevo",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(32.dp))
+
+            OutlinedTextField(
+                value = uiState.email,
+                onValueChange = viewModel::onEmailChange,
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                singleLine = true
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = uiState.password,
+                onValueChange = viewModel::onPasswordChange,
+                label = { Text("Contraseña") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                singleLine = true
+            )
+            Spacer(Modifier.height(8.dp))
+
+            TextButton(onClick = onNavigateToForgotPassword) {
+                Text("Olvidé mi contraseña", color = CieloProfundo)
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick = {  viewModel.signIn() },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = CieloProfundo),
+                enabled = true
+            ) {
+                Text("Iniciar sesión")
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("¿No tenés cuenta? ", color = TextoSecundario)
+                TextButton(onClick = onNavigateToRegister) {
+                    Text("Registrarte", color = CieloProfundo)
+                }
+            }
+        }
+    }
 @Composable
-fun LoginScreen(
-    onNavigateToRegister: () -> Unit = {},
-    onNavigateToForgotPassword: () -> Unit = {},
-    onLoginSuccess: () -> Unit = {}
+fun RegisterScreen(
+    viewModel: AuthViewModel = hiltViewModel(),
+    onRegisterSuccess: () -> Unit = {},
+    onBack: () -> Unit = {}
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
+
+    var confirmPassword by remember {
+        mutableStateOf("")
+    }
+
+    LaunchedEffect(uiState.authState) {
+        if (uiState.authState is AuthState.Authenticated) {
+            onRegisterSuccess()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -164,57 +254,66 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("👶", fontSize = 56.sp)
-        Spacer(Modifier.height(12.dp))
+
         Text(
-            "Bienvenida de nuevo",
+            text = "Crear cuenta",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        Spacer(Modifier.height(32.dp))
+
+        Spacer(Modifier.height(24.dp))
 
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
+            value = uiState.email,
+            onValueChange = viewModel::onEmailChange,
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth()
         )
+
         Spacer(Modifier.height(12.dp))
+
         OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
+            value = uiState.password,
+            onValueChange = viewModel::onPasswordChange,
             label = { Text("Contraseña") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth()
         )
-        Spacer(Modifier.height(8.dp))
 
-        TextButton(onClick = onNavigateToForgotPassword) {
-            Text("Olvidé mi contraseña", color = CieloProfundo)
-        }
+        Spacer(Modifier.height(12.dp))
 
-        Spacer(Modifier.height(16.dp))
+        OutlinedTextField(
+            value = confirmPassword,
+            onValueChange = { confirmPassword = it },
+            label = { Text("Confirmar contraseña") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(20.dp))
 
         Button(
-            onClick = { /* TODO: Firebase signIn */ },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = CieloProfundo),
-            enabled = false // Habilitar con Firebase
+            onClick = {
+                if (uiState.password == confirmPassword) {
+                    viewModel.signUp()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Iniciar sesión")
+            Text("Crear cuenta")
         }
 
         Spacer(Modifier.height(12.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("¿No tenés cuenta? ", color = TextoSecundario)
-            TextButton(onClick = onNavigateToRegister) {
-                Text("Registrarte", color = CieloProfundo)
-            }
+        TextButton(onClick = onBack) {
+            Text("Volver")
+        }
+
+        if (uiState.authState is AuthState.Error) {
+            Spacer(Modifier.height(12.dp))
+
+            Text(
+                text = (uiState.authState as AuthState.Error).message,
+                color = MaterialTheme.colorScheme.error
+            )
         }
     }
 }

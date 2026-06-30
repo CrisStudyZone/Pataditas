@@ -21,6 +21,9 @@ import com.serdigital.pataditas.ui.screen.home.HomeScreen
 import com.serdigital.pataditas.ui.screen.notes.NoteDetailScreen
 import com.serdigital.pataditas.ui.screen.notes.NotesScreen
 import com.serdigital.pataditas.ui.screen.stats.StatsScreen
+import com.serdigital.pataditas.ui.screen.auth.LoginScreen
+import com.serdigital.pataditas.ui.screen.auth.RegisterScreen
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -30,7 +33,7 @@ fun AppNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route,
+        startDestination = Screen.Login.route,
         modifier = modifier,
         enterTransition = {
             fadeIn(animationSpec = androidx.compose.animation.core.tween(220)) +
@@ -100,6 +103,37 @@ fun AppNavGraph(
         composable(Screen.Profile.route) {
             ProfileScreen(
                 onNavigateToLogin = { navController.navigate(Screen.Login.route) }
+            )
+        }
+        composable(Screen.Login.route) {
+            LoginScreen(
+                onNavigateToRegister = {
+                    navController.navigate(Screen.Register.route)
+                },
+                onNavigateToForgotPassword = {
+                    navController.navigate(Screen.ForgotPassword.route)
+                },
+                onLoginSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+        composable(Screen.Register.route) {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Register.route) {
+                            inclusive = true
+                        }
+                    }
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
             )
         }
     }
