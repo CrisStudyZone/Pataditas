@@ -1,5 +1,8 @@
 package com.serdigital.pataditas.ui.components
 
+import android.app.Activity
+import android.view.ViewGroup
+import android.widget.Button
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -8,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -305,5 +309,26 @@ fun StatCard(
                 color = TextoSecundario
             )
         }
+    }
+}
+
+@Composable
+fun ButtonCrash(
+    modifier: Modifier = Modifier
+) {
+    FloatingActionButton(
+        onClick = {
+            throw RuntimeException("Test Crash") // Fuerza el crash para Firebase
+        },
+        modifier = modifier,
+        containerColor = Color.Red, // Rojo para alertar que es un botón de prueba/crash
+        contentColor = Color.White,
+        shape = CircleShape
+    ) {
+        // Usamos un ícono de advertencia, pero puedes cambiarlo por el que gustes
+        Icon(
+            imageVector = Icons.Default.Warning,
+            contentDescription = "Forzar Crash"
+        )
     }
 }

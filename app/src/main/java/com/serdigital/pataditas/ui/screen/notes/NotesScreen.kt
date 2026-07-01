@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.serdigital.pataditas.domain.model.Note
+import com.serdigital.pataditas.ui.components.ButtonCrash
 import com.serdigital.pataditas.ui.components.SectionHeader
 import com.serdigital.pataditas.ui.theme.*
 import com.serdigital.pataditas.ui.viewmodel.NotesViewModel
@@ -112,17 +113,30 @@ fun NotesScreen(
             }
         }
 
-        // FAB
-        FloatingActionButton(
-            onClick = onNewNote,
+        // Botones
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp),
-            containerColor = CieloProfundo,
-            contentColor = Color.White,
-            shape = CircleShape
+            horizontalAlignment = Alignment.End
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Nueva nota")
+            // Boton para forzar crasheo
+            ButtonCrash()
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Boton de nueva nota
+            FloatingActionButton(
+                onClick = onNewNote,
+                containerColor = CieloProfundo,
+                contentColor = Color.White,
+                shape = CircleShape
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Nueva nota"
+                )
+            }
         }
     }
 }
