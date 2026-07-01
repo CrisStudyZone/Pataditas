@@ -28,12 +28,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 import com.serdigital.pataditas.ui.components.KickButton
 import com.serdigital.pataditas.ui.components.SessionStatusChip
 import com.serdigital.pataditas.ui.components.StatCard
@@ -146,6 +149,9 @@ fun HomeScreen(
             }
 
             Spacer(Modifier.height(32.dp))
+            //Evento analytics
+            val context = LocalContext.current
+            val analytics = FirebaseAnalytics.getInstance(context)
 
             // ─── Botón principal ──────────────────────────────────────────
             val isActive = uiState.counterState is CounterState.Counting
@@ -158,8 +164,29 @@ fun HomeScreen(
             KickButton(
                 isActive = isActive,
                 kickCount = kickCount,
-                onTap = { viewModel.onMainButtonTap() },
-                onLongPress = { viewModel.onMainButtonLongPress() },
+                onTap = {
+
+                    // 1. Ejecutamos la lógica existente del ViewModel
+                    viewModel.onMainButtonTap()
+
+                    // 📊 Evento 1: Registro de toque en el botón (Iniciar conteo o Registrar patada)
+                    analytics.logEvent("kick_button_tap") {
+                        param("is_active_session", isActive.toString())
+                        param("current_kick_count", kickCount.toLong())
+                        param("screen_name", "HomeScreen")
+                    }
+                        },
+                onLongPress = {
+
+                    // 1. Ejecutamos la lógica existente del ViewModel
+                    viewModel.onMainButtonLongPress()
+
+                    // 📊 Evento 2: Registro de presión larga (Finalizar sesión)
+                    analytics.logEvent("kick_button_long_press") {
+                        param("total_kicks_registered", kickCount.toLong())
+                        param("screen_name", "HomeScreen")
+                    }
+                              },
                 size = 200.dp
             )
 
