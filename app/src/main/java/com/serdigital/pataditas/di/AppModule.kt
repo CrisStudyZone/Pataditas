@@ -8,7 +8,8 @@ import com.serdigital.pataditas.data.local.dao.NoteDao
 import com.serdigital.pataditas.data.repository.KickSessionRepositoryImpl
 import com.serdigital.pataditas.data.repository.NoteRepositoryImpl
 import com.serdigital.pataditas.data.repository.StatsRepositoryImpl
-import com.serdigital.pataditas.data.repository.StubAuthRepositoryImpl
+import com.serdigital.pataditas.data.repository.FirebaseAuthRepositoryImpl
+import com.google.firebase.auth.FirebaseAuth
 import com.serdigital.pataditas.domain.repository.AuthRepository
 import com.serdigital.pataditas.domain.repository.KickSessionRepository
 import com.serdigital.pataditas.domain.repository.NoteRepository
@@ -39,6 +40,11 @@ object DatabaseModule {
 
     @Provides
     fun provideNoteDao(db: PataditasDatabase): NoteDao = db.noteDao()
+
+    @Provides
+    @Singleton
+    fun provideFirebaseAuth(): FirebaseAuth =
+        FirebaseAuth.getInstance()
 }
 
 @Module
@@ -57,11 +63,9 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindStatsRepository(impl: StatsRepositoryImpl): StatsRepository
 
-    /**
-     * Cuando se integre Firebase, reemplazar StubAuthRepositoryImpl
-     * por FirebaseAuthRepositoryImpl aquí, sin tocar nada más.
-     */
     @Binds
     @Singleton
-    abstract fun bindAuthRepository(impl: StubAuthRepositoryImpl): AuthRepository
+    abstract fun bindAuthRepository(
+        impl: FirebaseAuthRepositoryImpl
+    ): AuthRepository
 }
