@@ -12,12 +12,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.serdigital.pataditas.ui.components.SectionHeader
 import com.serdigital.pataditas.ui.components.SessionCard
 import com.serdigital.pataditas.ui.theme.*
@@ -34,6 +37,11 @@ fun HistoryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Estado local para controlar cuál sesión se intenta borrar (null significa diálogo cerrado)
+    var sessionToDelete by remember { mutableStateOf<Long?>(null) }
+
+    // El contenido principal (Loading, Empty o LazyColumn)
+    // Usamos weight(1f) para que ocupe todo el espacio disponible y empuje la botonera de examen al fondo
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -57,69 +65,132 @@ fun HistoryScreen(
                 )
             }
 
-            when {
-                uiState.isLoading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = CieloProfundo)
+            // ✨ CAMBIO AQUÍ: Usamos Column en lugar de Box para arreglar el contexto de AnimatedVisibility
+            Column(modifier = Modifier.weight(1f)) {
+                when {
+                    uiState.isLoading -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = CieloProfundo)
+                        }
                     }
-                }
 
-                uiState.sessions.isEmpty() -> {
-                    EmptyHistoryState()
-                }
+                    uiState.sessions.isEmpty() -> {
+                        EmptyHistoryState()
+                    }
 
-                else -> {
-                    val grouped = uiState.sessions.groupBy {
-                        it.date.toLocalDate()
-                    }.toSortedMap(reverseOrder())
+                    else -> {
+                        val grouped = uiState.sessions.groupBy {
+                            it.date.toLocalDate()
+                        }.toSortedMap(reverseOrder())
 
-                    LazyColumn(
-                        contentPadding = PaddingValues(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 24.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        grouped.forEach { (date, sessions) ->
-                            item(key = date.toString()) {
-                                Text(
-                                    text = formatDate(date),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = TextoSecundario,
-                                    modifier = Modifier.padding(
-                                        start = 8.dp,
-                                        top = 16.dp,
-                                        bottom = 4.dp
+                        LazyColumn(
+                            contentPadding = PaddingValues(
+                                start = 16.dp,
+                                end = 16.dp,
+                                bottom = 24.dp
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            grouped.forEach { (date, sessions) ->
+                                item(key = date.toString()) {
+                                    Text(
+                                        text = formatDate(date),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TextoSecundario,
+                                        modifier = Modifier.padding(
+                                            start = 8.dp,
+                                            top = 16.dp,
+                                            bottom = 4.dp
+                                        )
                                     )
-                                )
-                            }
+                                }
 
-                            items(
-                                items = sessions,
-                                key = { it.id }
-                            ) { session ->
-                                AnimatedVisibility(
-                                    visible = true,
-                                    enter = slideInHorizontally() + fadeIn()
-                                ) {
-                                    SessionCard(
-                                        kickCount = session.kickCount,
-                                        timeLabel = session.startTime.format(
-                                            DateTimeFormatter.ofPattern("HH:mm")
-                                        ),
-                                        duration = session.durationFormatted,
-                                        dateLabel = date.format(
-                                            DateTimeFormatter.ofPattern("dd/MM")
-                                        ),
-                                        onDelete = { viewModel.deleteSession(session.id) },
-                                        onClick = { onSessionClick(session.id) }
-                                    )
+                                items(
+                                    items = sessions,
+                                    key = { it.id }
+                                ) { session ->
+                                    // ¡Listo! Ahora AnimatedVisibility reconoce el ColumnScope superior y no da error
+                                    AnimatedVisibility(
+                                        visible = true,
+                                        enter = slideInHorizontally() + fadeIn()
+                                    ) {
+                                        SessionCard(
+                                            kickCount = session.kickCount,
+                                            timeLabel = session.startTime.format(
+                                                DateTimeFormatter.ofPattern("HH:mm")
+                                            ),
+                                            duration = session.durationFormatted,
+                                            dateLabel = date.format(
+                                                DateTimeFormatter.ofPattern("dd/MM")
+                                            ),
+                                            onDelete = { sessionToDelete = session.id },
+                                            onClick = { onSessionClick(session.id) }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
+                }
+            }
+
+            // 🛠️ BOTONERA DE EXAMEN (Fija abajo)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Botón 1: Forzar ANR con datos reales de Auth
+                TextButton(
+                    onClick = {
+                        val crashlytics = FirebaseCrashlytics.getInstance()
+                        val auth = FirebaseAuth.getInstance()
+
+                        // 🔐 Obtenemos el UID real del usuario de Firebase Auth (o "anonimo" si es null)
+                        val currentUserId = auth.currentUser?.uid ?: "usuario_anonimo"
+                        crashlytics.setUserId(currentUserId)
+
+                        // Si el usuario tiene email asociado, también lo mandamos como Key
+                        auth.currentUser?.email?.let { email ->
+                            crashlytics.setCustomKey("user_email", email)
+                        }
+
+                        crashlytics.setCustomKey("tipo_error", "ANR_MainThread")
+                        crashlytics.setCustomKey("cantidad_sesiones", uiState.sessions.size)
+                        crashlytics.setCustomKey("pantalla_origen", "HistoryScreen")
+
+                        Thread.sleep(7000)
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Forzar ANR 🛑", color = Color.Magenta, maxLines = 1)
+                }
+
+                // Botón 2: Forzar Crash con datos reales de Auth
+                TextButton(
+                    onClick = {
+                        val crashlytics = FirebaseCrashlytics.getInstance()
+                        val auth = FirebaseAuth.getInstance()
+
+                        // 🔐 Obtenemos el UID real del usuario de Firebase Auth
+                        val currentUserId = auth.currentUser?.uid ?: "usuario_anonimo"
+                        crashlytics.setUserId(currentUserId)
+
+                        auth.currentUser?.email?.let { email ->
+                            crashlytics.setCustomKey("user_email", email)
+                        }
+
+                        crashlytics.setCustomKey("tipo_error", "Crash_Excepcion")
+                        crashlytics.setCustomKey("cantidad_sesiones", uiState.sessions.size)
+                        crashlytics.setCustomKey("pantalla_origen", "HistoryScreen")
+
+                        throw RuntimeException("Crash forzado con datos de Firebase Auth")
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Forzar Crash 💥", color = Color.DarkGray, maxLines = 1)
                 }
             }
         }
