@@ -35,7 +35,7 @@ object DatabaseModule {
         Room.databaseBuilder(
             context,
             PataditasDatabase::class.java,
-            PataditasDatabase.DATABASE_NAME
+            "pataditas_db_v6"
         )
             .fallbackToDestructiveMigration()
             .fallbackToDestructiveMigrationOnDowngrade()
