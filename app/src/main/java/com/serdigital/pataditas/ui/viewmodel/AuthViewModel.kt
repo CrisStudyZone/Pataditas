@@ -27,11 +27,6 @@ data class AuthUiState(
     val isPasswordVisible: Boolean = false
 )
 
-/**
- * ViewModel de autenticación.
- * Preparado para Firebase Authentication — reemplazar el repository stub
- * por FirebaseAuthRepositoryImpl en el módulo Hilt cuando se integre Firebase.
- */
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository
