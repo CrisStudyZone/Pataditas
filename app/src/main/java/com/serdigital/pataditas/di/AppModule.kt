@@ -11,6 +11,7 @@ import com.serdigital.pataditas.data.repository.StatsRepositoryImpl
 import com.serdigital.pataditas.data.repository.FirebaseAuthRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
 import com.serdigital.pataditas.data.repository.ConfigRepositoryImpl
+import com.google.firebase.firestore.FirebaseFirestore
 import com.serdigital.pataditas.domain.repository.AuthRepository
 import com.serdigital.pataditas.domain.repository.ConfigRepository
 import com.serdigital.pataditas.domain.repository.KickSessionRepository
@@ -35,7 +36,10 @@ object DatabaseModule {
             context,
             PataditasDatabase::class.java,
             PataditasDatabase.DATABASE_NAME
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigrationOnDowngrade()
+            .build()
 
     @Provides
     fun provideKickSessionDao(db: PataditasDatabase): KickSessionDao = db.kickSessionDao()
@@ -47,6 +51,11 @@ object DatabaseModule {
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth =
         FirebaseAuth.getInstance()
+
+    @Provides
+    @Singleton
+    fun provideFirestore(): FirebaseFirestore =
+        FirebaseFirestore.getInstance()
 }
 
 @Module

@@ -18,8 +18,8 @@ import com.serdigital.pataditas.data.local.entity.NoteEntity
         NoteEntity::class,
         ContractionEntity::class
     ],
-    version = 2,
-    exportSchema = true
+    version = 4,
+    exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class PataditasDatabase : RoomDatabase() {
