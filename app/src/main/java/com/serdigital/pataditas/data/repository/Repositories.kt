@@ -4,8 +4,10 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import com.serdigital.pataditas.data.local.dao.KickSessionDao
 import com.serdigital.pataditas.data.local.dao.NoteDao
+import com.serdigital.pataditas.data.local.entity.KickSessionEntity
 import com.serdigital.pataditas.data.mapper.toDomain
 import com.serdigital.pataditas.data.mapper.toEntity
+import com.serdigital.pataditas.data.remote.firestore.FirestoreSessionDataSource
 import com.serdigital.pataditas.domain.repository.AuthRepository
 import com.serdigital.pataditas.domain.repository.KickSessionRepository
 import com.serdigital.pataditas.domain.repository.NoteRepository
@@ -15,6 +17,7 @@ import com.serdigital.pataditas.domain.model.HourlyActivity
 import com.serdigital.pataditas.domain.model.KickSession
 import com.serdigital.pataditas.domain.model.Note
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.time.LocalDate
@@ -24,17 +27,21 @@ import javax.inject.Singleton
 
 @Singleton
 class KickSessionRepositoryImpl @Inject constructor(
-    private val dao: KickSessionDao
+    private val dao: KickSessionDao,
+    private val authRepository: AuthRepository,
+    private val firestoreSessionDataSource: FirestoreSessionDataSource
 ) : KickSessionRepository {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getAllSessions(): Flow<List<KickSession>> =
-        dao.getAllSessions().map { list -> list.map { it.toDomain() } }
+        dao.getAllSessions()
+            .map { list -> list.map { it.toDomain() } }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getSessionsByDay(date: LocalDate): Flow<List<KickSession>> {
         val startOfDay = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val endOfDay = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1
+        val endOfDay =
+            date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1
         return dao.getSessionsByDay(startOfDay, endOfDay)
             .map { list -> list.map { it.toDomain() } }
     }
@@ -52,22 +59,58 @@ class KickSessionRepositoryImpl @Inject constructor(
         dao.getSessionById(id)?.toDomain()
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override suspend fun saveSession(session: KickSession): Long =
-        dao.insertSession(session.toEntity())
+    override suspend fun saveSession(session: KickSession): Long {
+    //dao.insertSession(session.toEntity())
+    // 1. Guardar en Room
+    val id = dao.insertSession(session.toEntity())
+
+    // 2. Obtener la sesión con el id asignado
+    val sessionWithId = session.copy(id = id)
+
+    // 3. Obtener el email del usuario logueado
+    val email = authRepository.currentUserEmail
+
+    // 4. Si hay usuario, subir a Firestore
+    if (email != null)
+    {
+        firestoreSessionDataSource.saveSession(
+            email,
+            sessionWithId.toEntity()
+        )
+    }
+
+    return id
+
+
+}
+
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override suspend fun updateSession(session: KickSession) =
+    override suspend fun updateSession(session: KickSession) {
+        // Actualizar en Room
         dao.updateSession(session.toEntity())
+
+        // Actualizar también en Firestore
+    val email = authRepository.currentUserEmail
+
+    if (email != null) {
+            firestoreSessionDataSource.saveSession(
+                email,session.toEntity())
+        }
+}
+
 
     override suspend fun deleteSession(id: Long) =
         dao.deleteSessionById(id)
 
-    /** Placeholder para sincronización futura con Firestore */
+    /**
+     * Reservado para una futura sincronización offline.
+     *
+     * Actualmente las sesiones se sincronizan inmediatamente
+     * con Firestore al guardarse o actualizarse.
+     */
     override suspend fun syncPendingSessions() {
-        // TODO: implementar con Firebase Firestore
-        // val unsynced = dao.getUnsyncedSessions()
-        // firestoreService.uploadSessions(unsynced)
-        // unsynced.forEach { dao.markAsSynced(it.id, generatedRemoteId) }
+        // Sin implementación por el momento.
     }
 }
 

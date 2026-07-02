@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface KickSessionDao {
 
-    @Query("SELECT * FROM kick_sessions ORDER BY startTime DESC")
+    @Query("SELECT * FROM kick_sessions ORDER BY date DESC")
     fun getAllSessions(): Flow<List<KickSessionEntity>>
 
     @Query("SELECT * FROM kick_sessions WHERE id = :id")
@@ -31,6 +31,9 @@ interface KickSessionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSession(session: KickSessionEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllSessions(sessions: List<KickSessionEntity>)
+
     @Update
     suspend fun updateSession(session: KickSessionEntity)
 
@@ -43,12 +46,14 @@ interface KickSessionDao {
     @Query("SELECT COUNT(*) FROM kick_sessions")
     suspend fun getTotalSessionCount(): Int
 
-    /** Para sincronización futura con Firestore */
     @Query("SELECT * FROM kick_sessions WHERE isSynced = 0")
     suspend fun getUnsyncedSessions(): List<KickSessionEntity>
 
     @Query("UPDATE kick_sessions SET isSynced = 1, remoteId = :remoteId WHERE id = :localId")
     suspend fun markAsSynced(localId: Long, remoteId: String)
+
+    @Query("DELETE FROM kick_sessions")
+    suspend fun deleteAllSessions()
 }
 
 @Dao

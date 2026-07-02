@@ -10,6 +10,7 @@ import com.serdigital.pataditas.data.repository.NoteRepositoryImpl
 import com.serdigital.pataditas.data.repository.StatsRepositoryImpl
 import com.serdigital.pataditas.data.repository.FirebaseAuthRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.serdigital.pataditas.domain.repository.AuthRepository
 import com.serdigital.pataditas.domain.repository.KickSessionRepository
 import com.serdigital.pataditas.domain.repository.NoteRepository
@@ -45,6 +46,11 @@ object DatabaseModule {
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth =
         FirebaseAuth.getInstance()
+
+    @Provides
+    @Singleton
+    fun provideFirestore(): FirebaseFirestore =
+        FirebaseFirestore.getInstance()
 }
 
 @Module
