@@ -34,7 +34,10 @@ object DatabaseModule {
             context,
             PataditasDatabase::class.java,
             PataditasDatabase.DATABASE_NAME
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigrationOnDowngrade()
+            .build()
 
     @Provides
     fun provideKickSessionDao(db: PataditasDatabase): KickSessionDao = db.kickSessionDao()
