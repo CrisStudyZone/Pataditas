@@ -42,3 +42,20 @@ data class NoteEntity(
     val updatedAt: Long = System.currentTimeMillis(),
     val isSynced: Boolean = false
 )
+
+/**
+ * Entidad para registro de contracciones
+ */
+@Entity(tableName = "contractions")
+data class ContractionEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val startTime: Long,
+    val endTime: Long?,
+    val durationSeconds: Long?,
+    /** Intervalo desde el inicio de la contracción anterior (en segundos) */
+    val intervalFromPreviousSeconds: Long?,
+    val sessionId: String, // agrupa contracciones de una misma sesión de trabajo de parto
+    val notes: String? = null,
+    val createdAt: Long = System.currentTimeMillis()
+)

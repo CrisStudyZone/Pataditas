@@ -90,4 +90,8 @@ dependencies {
 
     // Otras dependencias de firebase
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.config)
+
+    //Coil
+    implementation(libs.coil.compose)
 }

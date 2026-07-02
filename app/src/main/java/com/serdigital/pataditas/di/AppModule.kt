@@ -10,7 +10,9 @@ import com.serdigital.pataditas.data.repository.NoteRepositoryImpl
 import com.serdigital.pataditas.data.repository.StatsRepositoryImpl
 import com.serdigital.pataditas.data.repository.FirebaseAuthRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
+import com.serdigital.pataditas.data.repository.ConfigRepositoryImpl
 import com.serdigital.pataditas.domain.repository.AuthRepository
+import com.serdigital.pataditas.domain.repository.ConfigRepository
 import com.serdigital.pataditas.domain.repository.KickSessionRepository
 import com.serdigital.pataditas.domain.repository.NoteRepository
 import com.serdigital.pataditas.domain.repository.StatsRepository
@@ -68,4 +70,16 @@ abstract class RepositoryModule {
     abstract fun bindAuthRepository(
         impl: FirebaseAuthRepositoryImpl
     ): AuthRepository
+}
+
+//Modulo de inyeccion para RemoteConfig
+@Module
+@InstallIn(SingletonComponent::class)
+object ConfigModule {
+
+    @Provides
+    @Singleton
+    fun provideConfigRepository(): ConfigRepository {
+        return ConfigRepositoryImpl()
+    }
 }
