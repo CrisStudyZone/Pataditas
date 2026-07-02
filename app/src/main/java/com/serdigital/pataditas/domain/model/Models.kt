@@ -2,6 +2,15 @@ package com.serdigital.pataditas.domain.model
 
 import java.time.LocalDateTime
 
+
+/**
+ * Campañas de temas de pantalla, recepcion por remote config
+ */
+data class CampaignTheme(
+    val activeCampaign: String = "NONE",
+    val imageUrl: String = ""
+)
+
 /**
  * Modelo de dominio para una sesión de conteo.
  * Desacoplado de Room y de Firebase.
@@ -80,4 +89,45 @@ data class ActiveSession(
     val kickCount: Int,
     val kickTimestamps: List<Long>,
     val elapsedSeconds: Long
+)
+
+data class Contraction(
+    val id: Long = 0,
+    val startTime: LocalDateTime,
+    val endTime: LocalDateTime?,
+    val durationSeconds: Long?,
+    val intervalFromPreviousSeconds: Long?,
+    val sessionId: String,
+    val notes: String? = null
+) {
+    val durationFormatted: String
+        get() = durationSeconds?.let {
+            "%d:%02d".format(it / 60, it % 60)
+        } ?: "--:--"
+
+    val intervalFormatted: String
+        get() = intervalFromPreviousSeconds?.let {
+            "%d:%02d".format(it / 60, it % 60)
+        } ?: "--"
+
+    val isActive: Boolean
+        get() = endTime == null
+}
+
+/**
+ * Estado de alerta clínica basado en la regla 5-1-1:
+ * contracciones cada 5 minutos, duración 1 minuto, durante 1 hora.
+ */
+enum class ContractionAlert {
+    NONE,           // Sin patrón definido
+    REGULAR,        // Patrón regular pero no urgente
+    RULE_511,       // Cumple regla 5-1-1 → ir a la clínica
+}
+
+data class ContractionSession(
+    val sessionId: String,
+    val contractions: List<Contraction>,
+    val averageDurationSeconds: Double?,
+    val averageIntervalSeconds: Double?,
+    val alert: ContractionAlert
 )

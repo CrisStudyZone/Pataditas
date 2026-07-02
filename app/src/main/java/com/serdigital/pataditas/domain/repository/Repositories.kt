@@ -1,5 +1,6 @@
 package com.serdigital.pataditas.domain.repository
 
+import com.serdigital.pataditas.domain.model.Contraction
 import com.serdigital.pataditas.domain.model.DailyStats
 import com.serdigital.pataditas.domain.model.HourlyActivity
 import com.serdigital.pataditas.domain.model.KickSession
@@ -68,6 +69,8 @@ interface AuthRepository {
 
     val currentUserId: String?
 
+    val currentUserEmail: String?
+
     suspend fun signInWithEmail(email: String, password: String): Result<Unit>
 
     suspend fun signUpWithEmail(email: String, password: String): Result<Unit>
@@ -75,4 +78,19 @@ interface AuthRepository {
     suspend fun sendPasswordReset(email: String): Result<Unit>
 
     suspend fun signOut()
+}
+
+interface ContractionRepository {
+
+    fun getContractionsBySession(sessionId: String): Flow<List<Contraction>>
+
+    fun getAllSessionIds(): Flow<List<String>>
+
+    suspend fun startContraction(sessionId: String): Long
+
+    suspend fun endContraction(contractionId: Long)
+
+    suspend fun deleteSession(sessionId: String)
+
+    suspend fun getLastContraction(sessionId: String): Contraction?
 }

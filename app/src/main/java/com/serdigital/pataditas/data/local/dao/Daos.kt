@@ -1,6 +1,7 @@
 package com.serdigital.pataditas.data.local.dao
 
 import androidx.room.*
+import com.serdigital.pataditas.data.local.entity.ContractionEntity
 import com.serdigital.pataditas.data.local.entity.KickSessionEntity
 import com.serdigital.pataditas.data.local.entity.NoteEntity
 import kotlinx.coroutines.flow.Flow
@@ -8,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface KickSessionDao {
 
-    @Query("SELECT * FROM kick_sessions ORDER BY startTime DESC")
+    @Query("SELECT * FROM kick_sessions ORDER BY date DESC")
     fun getAllSessions(): Flow<List<KickSessionEntity>>
 
     @Query("SELECT * FROM kick_sessions WHERE id = :id")
@@ -31,6 +32,9 @@ interface KickSessionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSession(session: KickSessionEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllSessions(sessions: List<KickSessionEntity>)
+
     @Update
     suspend fun updateSession(session: KickSessionEntity)
 
@@ -43,12 +47,14 @@ interface KickSessionDao {
     @Query("SELECT COUNT(*) FROM kick_sessions")
     suspend fun getTotalSessionCount(): Int
 
-    /** Para sincronización futura con Firestore */
     @Query("SELECT * FROM kick_sessions WHERE isSynced = 0")
     suspend fun getUnsyncedSessions(): List<KickSessionEntity>
 
     @Query("UPDATE kick_sessions SET isSynced = 1, remoteId = :remoteId WHERE id = :localId")
     suspend fun markAsSynced(localId: Long, remoteId: String)
+
+    @Query("DELETE FROM kick_sessions")
+    suspend fun deleteAllSessions()
 }
 
 @Dao
@@ -74,4 +80,32 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes WHERE isSynced = 0")
     suspend fun getUnsyncedNotes(): List<NoteEntity>
+}
+
+@Dao
+interface ContractionDao {
+
+    @Query("SELECT * FROM contractions WHERE sessionId = :sessionId ORDER BY startTime ASC")
+    fun getContractionsBySession(sessionId: String): Flow<List<ContractionEntity>>
+
+    @Query("SELECT * FROM contractions ORDER BY startTime DESC")
+    fun getAllContractions(): Flow<List<ContractionEntity>>
+
+    @Query("SELECT DISTINCT sessionId FROM contractions ORDER BY startTime DESC")
+    fun getAllSessionIds(): Flow<List<String>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertContraction(contraction: ContractionEntity): Long
+
+    @Update
+    suspend fun updateContraction(contraction: ContractionEntity)
+
+    @Query("DELETE FROM contractions WHERE sessionId = :sessionId")
+    suspend fun deleteSession(sessionId: String)
+
+    @Query("SELECT * FROM contractions WHERE sessionId = :sessionId ORDER BY startTime DESC LIMIT 1")
+    suspend fun getLastContractionInSession(sessionId: String): ContractionEntity?
+
+    @Query("SELECT * FROM contractions WHERE id = :id")
+    suspend fun getContractionById(id: Long): ContractionEntity?
 }
