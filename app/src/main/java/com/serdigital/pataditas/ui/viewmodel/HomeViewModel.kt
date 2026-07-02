@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.serdigital.pataditas.domain.model.ActiveSession
+import com.serdigital.pataditas.domain.model.CampaignTheme
 import com.serdigital.pataditas.domain.model.KickSession
 import com.serdigital.pataditas.domain.usecase.AddKickToSessionUseCase
 import com.serdigital.pataditas.domain.usecase.EndSessionUseCase
@@ -32,7 +33,8 @@ data class HomeUiState(
     val todaySessions: List<KickSession> = emptyList(),
     val totalKicksToday: Int = 0,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val campaignTheme: CampaignTheme = CampaignTheme()
 )
 
 // ─── ViewModel ───────────────────────────────────────────────────────────────
@@ -43,7 +45,8 @@ class HomeViewModel @Inject constructor(
     private val startSessionUseCase: StartSessionUseCase,
     private val addKickToSessionUseCase: AddKickToSessionUseCase,
     private val endSessionUseCase: EndSessionUseCase,
-    private val getSessionsByDayUseCase: GetSessionsByDayUseCase
+    private val getSessionsByDayUseCase: GetSessionsByDayUseCase,
+    private val configRepository: com.serdigital.pataditas.domain.repository.ConfigRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -56,6 +59,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadTodaySessions()
+        fetchRemoteConfig()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -212,5 +216,22 @@ class HomeViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+    }
+
+    /**
+    *Actualizamos el estado para la sincronización de remote config
+     **/
+    private fun fetchRemoteConfig() {
+        viewModelScope.launch {
+            configRepository.fetchAndActivate().collect { isSuccess ->
+                if (isSuccess) {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            campaignTheme = configRepository.getCampaignTheme()
+                        )
+                    }
+                }
+            }
+        }
     }
 }

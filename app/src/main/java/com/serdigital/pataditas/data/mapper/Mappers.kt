@@ -2,8 +2,10 @@ package com.serdigital.pataditas.data.mapper
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.serdigital.pataditas.data.local.entity.ContractionEntity
 import com.serdigital.pataditas.data.local.entity.KickSessionEntity
 import com.serdigital.pataditas.data.local.entity.NoteEntity
+import com.serdigital.pataditas.domain.model.Contraction
 import com.serdigital.pataditas.domain.model.KickSession
 import com.serdigital.pataditas.domain.model.Note
 import java.time.Instant
@@ -70,4 +72,26 @@ fun Note.toEntity(): NoteEntity = NoteEntity(
     createdAt = createdAt.toEpochMilli(),
     updatedAt = updatedAt.toEpochMilli(),
     isSynced = isSynced
+)
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun ContractionEntity.toDomain(): Contraction = Contraction(
+    id = id,
+    startTime = startTime.toLocalDateTime(),
+    endTime = endTime?.toLocalDateTime(),
+    durationSeconds = durationSeconds,
+    intervalFromPreviousSeconds = intervalFromPreviousSeconds,
+    sessionId = sessionId,
+    notes = notes
+)
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun Contraction.toEntity(): ContractionEntity = ContractionEntity(
+    id = id,
+    startTime = startTime.toEpochMilli(),
+    endTime = endTime?.toEpochMilli(),
+    durationSeconds = durationSeconds,
+    intervalFromPreviousSeconds = intervalFromPreviousSeconds,
+    sessionId = sessionId,
+    notes = notes
 )

@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -35,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.serdigital.pataditas.ui.components.KickButton
@@ -161,34 +165,58 @@ fun HomeScreen(
                 else -> 0
             }
 
-            KickButton(
-                isActive = isActive,
-                kickCount = kickCount,
-                onTap = {
+            //1. Boton de pataditas original
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                KickButton(
+                    isActive = isActive,
+                    kickCount = kickCount,
+                    onTap = {
 
-                    // 1. Ejecutamos la lógica existente del ViewModel
-                    viewModel.onMainButtonTap()
+                        // 1. Ejecutamos la lógica existente del ViewModel
+                        viewModel.onMainButtonTap()
 
-                    // 📊 Evento 1: Registro de toque en el botón (Iniciar conteo o Registrar patada)
-                    analytics.logEvent("kick_button_tap") {
-                        param("is_active_session", isActive.toString())
-                        param("current_kick_count", kickCount.toLong())
-                        param("screen_name", "HomeScreen")
-                    }
-                        },
-                onLongPress = {
+                        // 📊 Evento 1: Registro de toque en el botón (Iniciar conteo o Registrar patada)
+                        analytics.logEvent("kick_button_tap") {
+                            param("is_active_session", isActive.toString())
+                            param("current_kick_count", kickCount.toLong())
+                            param("screen_name", "HomeScreen")
+                        }
+                    },
+                    onLongPress = {
 
-                    // 1. Ejecutamos la lógica existente del ViewModel
-                    viewModel.onMainButtonLongPress()
+                        // 1. Ejecutamos la lógica existente del ViewModel
+                        viewModel.onMainButtonLongPress()
 
-                    // 📊 Evento 2: Registro de presión larga (Finalizar sesión)
-                    analytics.logEvent("kick_button_long_press") {
-                        param("total_kicks_registered", kickCount.toLong())
-                        param("screen_name", "HomeScreen")
-                    }
-                              },
-                size = 200.dp
-            )
+                        // 📊 Evento 2: Registro de presión larga (Finalizar sesión)
+                        analytics.logEvent("kick_button_long_press") {
+                            param("total_kicks_registered", kickCount.toLong())
+                            param("screen_name", "HomeScreen")
+                        }
+                    },
+                    size = 200.dp
+                )
+
+                // 2. Si el JSON dice que la campaña está activa, cargamos la imagen de internet
+                if (uiState.campaignTheme.activeCampaign != "NONE" && uiState.campaignTheme.imageUrl.isNotEmpty()) {
+                    // Configuramos sutilmente el diseño según el tipo de accesorio
+                    val rotation = if (uiState.campaignTheme.activeCampaign == "CHRISTMAS") 13f else 20f
+                    val offsetAdjustmentX = if (uiState.campaignTheme.activeCampaign == "CHRISTMAS") (85).dp else (55).dp
+                    val offsetAdjustmentY = if (uiState.campaignTheme.activeCampaign == "CHRISTMAS") (-85).dp else (-105).dp
+                    val size = if (uiState.campaignTheme.activeCampaign == "CHRISTMAS") 185.dp else 205.dp
+
+                    AsyncImage(
+                        model = uiState.campaignTheme.imageUrl,
+                        contentDescription = "Decoración de Campaña Estacional",
+                        modifier = Modifier
+                            .size(size) // Ajustamos el tamaño
+                            .offset(x = offsetAdjustmentX, y = offsetAdjustmentY) // lo ubicamos dodne queda bien
+                            .rotate(rotation) // Lo rotamos para que se apoye sobre el boton
+                    )
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 

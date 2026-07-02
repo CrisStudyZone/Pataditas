@@ -1,6 +1,7 @@
 package com.serdigital.pataditas.data.local.dao
 
 import androidx.room.*
+import com.serdigital.pataditas.data.local.entity.ContractionEntity
 import com.serdigital.pataditas.data.local.entity.KickSessionEntity
 import com.serdigital.pataditas.data.local.entity.NoteEntity
 import kotlinx.coroutines.flow.Flow
@@ -79,4 +80,32 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes WHERE isSynced = 0")
     suspend fun getUnsyncedNotes(): List<NoteEntity>
+}
+
+@Dao
+interface ContractionDao {
+
+    @Query("SELECT * FROM contractions WHERE sessionId = :sessionId ORDER BY startTime ASC")
+    fun getContractionsBySession(sessionId: String): Flow<List<ContractionEntity>>
+
+    @Query("SELECT * FROM contractions ORDER BY startTime DESC")
+    fun getAllContractions(): Flow<List<ContractionEntity>>
+
+    @Query("SELECT DISTINCT sessionId FROM contractions ORDER BY startTime DESC")
+    fun getAllSessionIds(): Flow<List<String>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertContraction(contraction: ContractionEntity): Long
+
+    @Update
+    suspend fun updateContraction(contraction: ContractionEntity)
+
+    @Query("DELETE FROM contractions WHERE sessionId = :sessionId")
+    suspend fun deleteSession(sessionId: String)
+
+    @Query("SELECT * FROM contractions WHERE sessionId = :sessionId ORDER BY startTime DESC LIMIT 1")
+    suspend fun getLastContractionInSession(sessionId: String): ContractionEntity?
+
+    @Query("SELECT * FROM contractions WHERE id = :id")
+    suspend fun getContractionById(id: Long): ContractionEntity?
 }
