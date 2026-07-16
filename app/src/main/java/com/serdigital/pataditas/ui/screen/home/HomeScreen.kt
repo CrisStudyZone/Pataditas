@@ -52,6 +52,7 @@ import com.serdigital.pataditas.ui.theme.GrisMedio
 import com.serdigital.pataditas.ui.theme.LavandaSuave
 import com.serdigital.pataditas.ui.theme.RosadoSuave
 import com.serdigital.pataditas.ui.theme.SuperficieCard
+import com.serdigital.pataditas.ui.theme.TemaRemoto
 import com.serdigital.pataditas.ui.theme.TextoPrincipal
 import com.serdigital.pataditas.ui.theme.TextoSecundario
 import com.serdigital.pataditas.ui.theme.Verde
@@ -72,7 +73,7 @@ fun HomeScreen(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        CieloSuave.copy(alpha = 0.4f),
+                        uiState.colorPrimario.copy(alpha = 0.4f),
                         BlancoRoto,
                         LavandaSuave.copy(alpha = 0.2f)
                     )

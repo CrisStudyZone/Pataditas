@@ -7,4 +7,5 @@ interface ConfigRepository {
     fun getCampaignTheme(): com.serdigital.pataditas.domain.model.CampaignTheme
     fun shouldShowExamenButtons(): Boolean
     fun isChristmasThemeEnabled(): Boolean
+    fun getAppThemeColor(): String
 }

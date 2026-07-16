@@ -54,4 +54,6 @@ class ConfigRepositoryImpl : ConfigRepository {
     override fun isChristmasThemeEnabled(): Boolean {
         return remoteConfig.getBoolean("show_christmas_theme")
     }
+
+    override fun getAppThemeColor(): String = remoteConfig.getString("app_theme_color")
 }

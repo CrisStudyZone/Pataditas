@@ -2,6 +2,7 @@ package com.serdigital.pataditas.ui.viewmodel
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.serdigital.pataditas.domain.model.ActiveSession
@@ -11,10 +12,15 @@ import com.serdigital.pataditas.domain.usecase.AddKickToSessionUseCase
 import com.serdigital.pataditas.domain.usecase.EndSessionUseCase
 import com.serdigital.pataditas.domain.usecase.GetSessionsByDayUseCase
 import com.serdigital.pataditas.domain.usecase.StartSessionUseCase
+import com.serdigital.pataditas.ui.theme.CieloSuave
+import com.serdigital.pataditas.ui.theme.RosadoSuave
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -34,7 +40,8 @@ data class HomeUiState(
     val totalKicksToday: Int = 0,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val campaignTheme: CampaignTheme = CampaignTheme()
+    val campaignTheme: CampaignTheme = CampaignTheme(),
+    val colorPrimario: Color = CieloSuave
 )
 
 // ─── ViewModel ───────────────────────────────────────────────────────────────
@@ -227,7 +234,11 @@ class HomeViewModel @Inject constructor(
                 if (isSuccess) {
                     _uiState.update { currentState ->
                         currentState.copy(
-                            campaignTheme = configRepository.getCampaignTheme()
+                            campaignTheme = configRepository.getCampaignTheme(),
+                            colorPrimario = when (configRepository.getAppThemeColor()) {
+                                "rosa" -> RosadoSuave
+                                else -> CieloSuave
+                            }
                         )
                     }
                 }
